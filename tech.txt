@@ -1,0 +1,64 @@
+1 web后台目前的问题：
+
+目前我们广泛应用phalcon框架，之前一直都是没有应用事务的，错误捕获也比较凌乱。
+
+多少个清晨，刚来到公司，企业微信已n条未读消息，打开就是，我的怎么弹窗空白了（出bug），怎么点了没反应（有可能因为登录态过期了），最常见的还是
+前者。
+
+于是追着她们问什么时候出现的bug，有消息提示吗？
+
+接下来，我们的操作就是 cd /data/appdata/log 查看文件日志，然后就是问业务当时在做操作具体哪几条数据，接下来就是拼接SQL - 改库；
+
+而我们想要的效果是，业务永远都能弹窗提示是操作错误，还是系统错误（undefined index、data too long、invalid ‘’ for int、redis connection err）等等，
+都是需要兜底的话术的（服务器内部错误，请联系开发～）
+
+而关于定位bug，我们不想追着业务当时响应码也不想远程她们复现bug，而是，我有一封邮件告知我错误信息。
+
+而关于php的错误处理：https://www.php.net/manual/zh/book.errorfunc.php
+
+
+
+异常和错误如何界定？既然异常和错误都被接收处理了？为什么还要有register_shutdown_function？try-catch又是什么样的存在
+
+而phalcon的index.php入口文件
+
+
+好像error是包含比较多的，致命错误或者非致命错误，所以php错误 比如undefined index
+
+我们想要的效果是：
+
+
+
+---------
+
+
+PHP异常出现会直接终止脚本运行
+
+PHP错误则不会，所以对于error_handle函数在执行完成以后，脚本将会继续执行发生错误的后一行。
+
+register_shutdown_function ： php终止运行
+PHP中止的情况有三种：
+    执行完成
+    exit/die导致的中止
+    发生致命错误中止
+
+PHP7中新增了Throwable异常类，这个类可以捕获致命错误，即可以使用try…catch(Throwable $e)来捕获致命错误。
+
+一、异常与错误
+异常是指程序运行中不符合预期情况以及与正常流程不同的状况。错误则属于自身问题，是一种非法语法或者环境问题导致的、让编译器无法通过检查设置无法运行的情况。
+
+由于php最开始是没有异常处理，后来为了进军企业级开发，模仿java等语言，推出了异常。导致php中遇到任何自身错误都会触发一个错误，
+而不是抛出一个异常(某些情况下，会同时抛出错误和异常)。PHP一旦遇到非正常代码，大多数情况下，都是直接抛出错误，而不是异常。
+
+php只有在你throw 一个异常后，才能用try...catch来捕获异常(一般情况下如此，也有部分异常可以自动捕获)。
+
+
+
+try-catch 不能捕获的有：php warning - Undefined array key "test"  会继续往下走
+
+Undefined variable $a  --  会继续往下走
+
+
+try-catch能捕获的有 - fatal - error - Call to undefined function test() - 不会继续往下走
+
+PHP Fatal error:  Uncaught Error: Class "test" not found  - 不会继续往下走
