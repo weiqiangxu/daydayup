@@ -1,0 +1,10 @@
+elastic search首先要记住几个术语：
+索引index、类型type、文档Document
+节点Node、集群Cluster
+
+单个 Elastic 实例称为一个节点（node）。一组节点构成一个集群（cluster）
+所以我们单机单个实例 - 其实可以成为单节点
+
+
+对于elastic而言，一个索引index代表一个数据库，并且这个索引名（数据库名）必须小写哦
+
