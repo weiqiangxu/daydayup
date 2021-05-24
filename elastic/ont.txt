@@ -8,3 +8,41 @@ elastic search首先要记住几个术语：
 
 对于elastic而言，一个索引index代表一个数据库，并且这个索引名（数据库名）必须小写哦
 
+
+入门文档地址：
+
+https://www.elastic.co/guide/cn/elasticsearch/guide/current/getting-started.html
+
+1 检索文档 - 使用 \index\1 即可查找具体的文档内容
+
+2 轻量搜索 - GET /megacorp/employee/_search?q=last_name:Smith
+
+3 查询表达式搜索 - 领域特定语言 （DSL）
+    GET /megacorp/employee/_search
+    {
+        "query" : {
+            "match" : {
+                "last_name" : "Smith"
+            }
+        }
+    }   
+
+4 更复杂的搜索
+
+GET /megacorp/employee/_search
+{
+    "query" : {
+        "bool": {
+            "must": {
+                "match" : {
+                    "last_name" : "smith" 
+                }
+            },
+            "filter": {
+                "range" : {
+                    "age" : { "gt" : 30 } 
+                }
+            }
+        }
+    }
+}
