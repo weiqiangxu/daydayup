@@ -1,14 +1,16 @@
 <?php
 
+// 如何用2个栈实现一个队列
+
 class my_quene {
     public $stack_one = array();
     public $stack_two = array();
 
-    function get($stack){
+    function get(&$stack){
         // 返回最后一个元素
         return array_pop($stack);
     }
-    function set($stack,$item){
+    function set(&$stack,$item){
         // 插入一个元素
         $stack[] = $item;
         return true;
@@ -23,6 +25,7 @@ class my_quene {
             for ($i=0; $i < $c; $i++) { 
                 $this->set($this->stack_two,$this->get($this->stack_one));
             }
+            var_dump($this->stack_one);
             return $this->get($this->stack_two);
         }
     }
