@@ -41,8 +41,55 @@ GET /megacorp/employee/_search
             "filter": {
                 "range" : {
                     "age" : { "gt" : 30 } 
-                }
+                },
+                
             }
         }
     }
 }
+
+
+https://www.elastic.co/guide/cn/elasticsearch/guide/current/mapping-intro.html
+
+基础入门 - 映射与分析 - 映射 
+
+所有数据字段类型
+
+
+
+https://blog.csdn.net/weixin_38858749/article/details/110926092
+
+时间相关聚合date_histogram 聚合
+
+GET cars/index/_search
+{
+  "size":0,
+  "aggs": {
+    "sales": {
+      "date_histogram": {//按照日期时间聚合分析数据
+        "field": "time",//分析的字段
+        "calendar_interval": "day",//按天间隔，聚合粒度为day
+        "format": "yyyy-MM-dd",//日期格式
+        "min_doc_count": 2,// 设定每个聚合区间的数量>=2的才返回
+        "extended_bounds":{//强制返回的日期区间；如果不加这个就只返回有数据的区间
+          "min":"2014-01-01",
+          "max":"2018-12-31"
+        },
+        "time_zone": "Asia/Shanghai"//使用时区
+      }
+    }
+  }
+}
+
+https://www.jianshu.com/p/62bed9cc8349
+如何实现count + distinct + group by + where
+
+
+
+
+
+
+
+
+
+
