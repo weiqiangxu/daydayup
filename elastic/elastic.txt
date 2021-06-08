@@ -133,9 +133,6 @@ POST 127.0.0.1/dimi_list/doc/_search
 
 
 2 filter桶 : 一个用来过滤的桶
-
-比如获取服务研发中心或者产品规划中心的数量；
-
 GET 127.0.0.1/mytest/doc/_search
 {
     "query": {
@@ -155,33 +152,4 @@ GET 127.0.0.1/mytest/doc/_search
             }
         }
     }
-}
-
-# 获取每个中心每个月离职的人数
-{
-    "size":0,
-    "aggs":{
-        "centerName":{
-            "terms":{
-                "field":"DIMI_DIMISSION_CenterName"
-            },
-            "aggs":{
-                "ApplyDate":{
-                    "date_histogram":{
-                        "field":"DIMI_DIMISSION_ApplyDate",
-                        "format": "yyyy-MM",
-                        "interval":"month",
-                        "min_doc_count":0,
-                        "order":{
-                            "_key":"desc"
-                        },
-                        "extended_bounds":{
-                            "min":null,
-                            "max":null
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
