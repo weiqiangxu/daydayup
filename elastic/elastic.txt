@@ -1,0 +1,187 @@
+基本搜索语句使用elasticsearch-head点击图形化按钮拼接获取json串
+
+query搜索参数
+
+{
+    "query": {
+      "term": {
+        "name": "washing"
+      }
+    }
+  }
+关于query的term，其实term是相当于mysql的like - term检索，如果name分词后含有washing这个token，就会检索到，但是字段属性为text的可以，keyword的属性的字段不会被拆分，如果name设置为keyword是不会查找到的
+
+
+而如果对于text的字段，如果字段值是 like china使用term : "like china"是查询不到的 - 注意 “text字段不能完全匹配只适合分词查找”
+
+“keyword字段不适用于分词查找只适用于完全匹配”
+
+term不会分词。而keyword字段也不分词。需要完全匹配才可  - 这句话的意思是 term:"like china"时候不会拆分成like + china去查找，而对于keyword属性的字段:"like china"被查找
+的时候也不会被当作like+china用作被查找
+
+
+"因为text字段会分词而term不分词所以term查询的条件必须是text字段分词后的某一个“
+
+这句话指的是对于text字段你的term属性值不能是完整的text字段因为text会匹配不到,term属性值只能是text的一小部分（被分词后的结果），这点有点奇怪
+
+
+
+match对于keyword字段类型的属性值搜索：
+
+首先明确一点match会被分词，而keyword是不会被分词的，如果你想要match查询keyword字段的值，需要完全匹配
+
+match查询text字段
+
+两个都支持分词，所以只要match的分词结果和text的分词结果有相同的就会匹配
+
+match_phrase查询keyword 
+
+这个必须完全匹配才能查询到
+
+mathc_phrase查询text
+
+两个都是分词的，但是有一个要求， phrase对顺序和连续性有要求：也就是text字段的值如果是 i like china 那么match_phrase的值必须是 like china 而不是 china like;
+
+
+query_string查询key类型的字段，试过了，无法查询。
+
+query_string查询text类型的字段
+
+两个都支持分词，并且对顺序无要求
+
+
+
+from起始条数
+
+size每页数量
+
+创建索引 - 可以设置各个字段类型 
+PUT my_index 索引
+{
+  "mappings": {
+    "products": { //索引type
+      "properties": {
+        "name": {
+          "type": "keyword" //类型是关键字
+        }
+      }
+    }
+  }
+}
+
+
+
+
+============================关于聚合搜索======
+
+
+https://blog.csdn.net/weixin_40341116/article/details/81173016
+
+首先要明白的是桶和指标：
+
+桶(Buckets) : 满足特定条件的文档的集合 （数据集合的筛选条件：部门、中心）一般指的是一个条件类mysql的group by的一个字段
+指标(Metrics) : 对桶内的文档进行统计计算 （min、max、avg、sum）
+
+aggs字段里面可以有很多个聚合，每个聚合之间是彼此独立的；aggs之中可以有term桶、filter桶、top_hits桶
+
+1、terms桶 - terms桶 : 针对某个field的值进行分组，field有几种值就分成几组
+
+比如颜色color直接将字段值blue、red作为桶，可以搭配度量指标(avg、min、max、sum...)一起使用，并且在blue桶里面嵌套指标
+比如是1月和2月
+获取到各个中心离职的的最大月份:
+POST 127.0.0.1/dimi_list/doc/_search
+{
+    "size":0,
+    "aggs":{
+        "centerName":{
+            "terms":{
+                "field":"DIMI_DIMISSION_CenterName"
+            },
+            "aggs":{
+                "month":{
+                    "max":{
+                        "field":"DIMI_DIMISSION_ApplyDate",
+                        "format": "yyyy-MM-dd" //格式化时间
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+如何获取每个中心离职的每个月分组人数？
+{
+    "size":0,
+    "aggs":{
+        "centerName":{
+            "terms":{
+                "field":"DIMI_DIMISSION_CenterName"
+            },
+            "aggs":{
+                "month":{
+                    "terms":{
+                        "field":"DIMI_DIMISSION_ApplyDate",
+                        "format": "yyyy-MM"
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+2 filter桶 : 一个用来过滤的桶
+
+比如获取服务研发中心或者产品规划中心的数量；
+
+GET 127.0.0.1/mytest/doc/_search
+{
+    "query": {
+        "match_all": {}
+    },
+    "size": 0,
+    "aggs": {
+        "my_name": {
+            "filter": { //因为他用法跟一般的过滤filter一样，所以也能使用bool嵌套
+                "bool": {
+                    "must": {
+                        "terms": { //注意此terms是查找terms，不是terms桶
+                            "color": [ "red", "blue" ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+# 获取每个中心每个月离职的人数
+{
+    "size":0,
+    "aggs":{
+        "centerName":{
+            "terms":{
+                "field":"DIMI_DIMISSION_CenterName"
+            },
+            "aggs":{
+                "ApplyDate":{
+                    "date_histogram":{
+                        "field":"DIMI_DIMISSION_ApplyDate",
+                        "format": "yyyy-MM",
+                        "interval":"month",
+                        "min_doc_count":0,
+                        "order":{
+                            "_key":"desc"
+                        },
+                        "extended_bounds":{
+                            "min":null,
+                            "max":null
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

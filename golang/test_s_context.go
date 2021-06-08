@@ -3,8 +3,37 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 )
+
+// https://studygolang.com/articles/22780
+// 1 超时回收go协程防止go主协程一直被wait阻塞
+// 做法通常是将正常逻辑的代码丢到一个子协程里面但是当执行完成的时候往管道推送一个信号
+// 而协程的逻辑执行到select上阻塞，监听超时信号或者执行完成的信号
+// 类似这样
+func testWithGoroutineTimeOut() {
+	var wg sync.WaitGroup
+	done := make(chan struct{})
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+		}()
+	}
+	// wg.Wait()此时也要go出去,防止在wg.Wait()出堵住
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+	select {
+	// 正常结束完成
+	case <-done:
+	// 超时	
+	case <-time.After(500 * time.Millisecond):
+	}
+}
+// 在上面的还说到有一种叫协程池的东西
 
 func main() {
 	// 1 这一段代码必须在30s之内执行完成
