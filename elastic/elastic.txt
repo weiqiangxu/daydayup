@@ -153,3 +153,40 @@ GET 127.0.0.1/mytest/doc/_search
         }
     }
 }
+
+首先关于存储，es之中string类型的字符串存储为text类型或者keyword类型，而text会分词而keyword不会
+
+https://www.cnblogs.com/shoufeng/p/11103913.html
+
+# 各个搜索字段的意思
+
+match
+
+match query首先会对查询值进行分词，
+
+match搜索keyword只有完全匹配时候才会有值
+
+因为会分词所以相当于模糊查找
+
+term
+
+不会对查询值分词｜会确切查询|适合keyword,numeric,date
+
+wildcard
+
+通配符检索
+
+prefix query - 前缀检索
+
+fuzzy query - 纠错检索
+
+range 范围查找，date大小和numeric大小都可以支持
+
+query_string 文档更细致一点 https://www.cnblogs.com/juncaoit/p/12741841.html
+
+text
+
+搜索类型text查询keyword查询无响应
+
+missing
+
